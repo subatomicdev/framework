@@ -22,9 +22,7 @@ namespace framework
         {            
             m_connectionHandler = connectionHandler;
 
-            m_acceptor = std::make_unique<asio::ip::tcp::acceptor> (m_context, asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), port));
-            
-            asio::error_code ec;
+            m_acceptor = std::make_unique<asio::ip::tcp::acceptor> (m_context, asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), port));           
 
             m_serviceThread = std::make_unique<std::thread>([&]()
             {
@@ -33,15 +31,16 @@ namespace framework
                     m_state = TcpServer::ServerState::Running;
                     promise.set_value(m_state);
 
+                    asio::error_code ec;
                     m_context.run(ec); // sync call
 
                     if (ec)
                     {
-                        m_state = TcpServer::ServerState::StartFailed;
-                        promise.set_value(m_state);
-                        
                         std::stringstream ss;
                         ss << "code: " << ec.value() << " : " << ec.message();
+
+                        m_state = TcpServer::ServerState::StartFailed;
+                        promise.set_value(m_state);                       
 
                         logg(ss.str());
                     }
@@ -64,12 +63,16 @@ namespace framework
                 }
             });
 
-
-            if (!ec)
-            {
-                // this is non-blocking: it'll asynchronously wait for a connection
-                accept();
-            }
+            while (m_context.stopped())
+                ;
+            
+            accept(); // this is non-blocking: it'll asynchronously wait for a connection
+        }
+        catch (std::exception ex)
+        {
+            logg(ex.what());
+            m_state = TcpServer::ServerState::Stopped;
+            promise.set_value(m_state);
         }
         catch (...)
         {

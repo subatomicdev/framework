@@ -19,7 +19,7 @@ namespace framework
     {
         if (!str.empty() && l == Level)
         {
-            std::cout << std::endl << str;
+            std::cout << str << "\n";
         }
     }
 }

@@ -219,7 +219,7 @@ void clientMonitorTick()
 }
 
 
-int main()
+int main(int argc, char ** argv)
 {
     using namespace std::chrono_literals;
 
@@ -232,6 +232,12 @@ int main()
     
 
     // TCP Server
+    string ip = "127.0.0.1";
+    if (argc >= 2)
+    {
+        ip.assign(argv[1]);
+    }
+
     promise<TcpServer::ServerState> serverPromise;
     auto serverStartFuture = serverPromise.get_future();
     
@@ -240,7 +246,7 @@ int main()
     TcpServer server;
     
     function<void(asio::ip::tcp::socket&&)> newClientHandler = handleNewSession;
-    server.start(serverPromise, newClientHandler, "192.168.0.15", 16474);
+    server.start(serverPromise, newClientHandler, ip.c_str(), 16474);
 
     if (serverStartFuture.valid() && serverStartFuture.get() == TcpServer::ServerState::Running)
     {
