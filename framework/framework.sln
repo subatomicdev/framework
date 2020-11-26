@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "prototype", "prototype\prot
 		{2B81F1DF-5663-448F-9A73-10E63EDA555D} = {2B81F1DF-5663-448F-9A73-10E63EDA555D}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scp", "scp\scp.vcxproj", "{7B127ED5-3F69-4A8B-B6B5-8164985C0633}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -34,6 +36,14 @@ Global
 		{5EA3DC0E-3E16-44F0-BC96-F47A95F02B65}.Release|x64.Build.0 = Release|x64
 		{5EA3DC0E-3E16-44F0-BC96-F47A95F02B65}.Release|x86.ActiveCfg = Release|Win32
 		{5EA3DC0E-3E16-44F0-BC96-F47A95F02B65}.Release|x86.Build.0 = Release|Win32
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Debug|x64.ActiveCfg = Debug|x64
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Debug|x64.Build.0 = Debug|x64
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Debug|x86.ActiveCfg = Debug|Win32
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Debug|x86.Build.0 = Debug|Win32
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Release|x64.ActiveCfg = Release|x64
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Release|x64.Build.0 = Release|x64
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Release|x86.ActiveCfg = Release|Win32
+		{7B127ED5-3F69-4A8B-B6B5-8164985C0633}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
