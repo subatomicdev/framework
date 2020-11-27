@@ -27,15 +27,8 @@ namespace framework
     class StageData
     {
     public:
-        StageData()
-        {
-
-        }
-
-        virtual ~StageData()
-        {
-
-        }
+        StageData() = default;
+        virtual ~StageData() = default;        
     };
 
 
@@ -152,6 +145,8 @@ namespace framework
         virtual void run() = 0;
 
         virtual void stopStage();
+
+        inline void injectData(const shared_ptr<StageData>& data);
 
         void handleStageCommand(const Poco::AutoPtr<StageCommand>& pNf);
 

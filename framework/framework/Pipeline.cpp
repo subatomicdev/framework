@@ -80,5 +80,14 @@ namespace framework
 
         ++m_nextStageId;
     }
+
+
+    void Pipeline::injectData(const shared_ptr<StageData>& data)
+    {
+        if (!m_stages.empty())
+        {
+            m_stages.begin()->second->injectData(data);
+        }
+    }
 }
 

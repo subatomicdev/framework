@@ -208,8 +208,21 @@ extern "C" void sigChildHandler(int)
 #define SHORTCOL 4
 #define LONGCOL 21
 
+
+// ADDED
+#include "ScpPipeline.hpp"
+
+framework::Pipeline m_pipeline("SCP Pipeline");
+
+
+
 int main(int argc, char* argv[])
 {
+    // ADDED
+    m_pipeline.addStage(std::make_shared<Prepare>());
+    m_pipeline.start();
+
+
     T_ASC_Network* net;
     DcmAssociationConfiguration asccfg;
     DcmTLSOptions tlsOptions(NET_ACCEPTOR);
@@ -1614,6 +1627,12 @@ processCommands(T_ASC_Association* assoc)
             case DIMSE_C_STORE_RQ:
                 // process C-STORE-Request
                 cond = storeSCP(assoc, &msg, presID);
+
+                if (cond.good())
+                {
+
+                }
+
                 break;
             default:
                 OFString tempStr;
@@ -1688,14 +1707,7 @@ struct StoreCallbackData
 };
 
 
-static void
-storeSCPCallback(
-    void* callbackData,
-    T_DIMSE_StoreProgress* progress,
-    T_DIMSE_C_StoreRQ* req,
-    char* /*imageFileName*/, DcmDataset** imageDataSet,
-    T_DIMSE_C_StoreRSP* rsp,
-    DcmDataset** statusDetail)
+static void storeSCPCallback(void* callbackData, T_DIMSE_StoreProgress* progress, T_DIMSE_C_StoreRQ* req, char* /*imageFileName*/, DcmDataset** imageDataSet, T_DIMSE_C_StoreRSP* rsp, DcmDataset** statusDetail)
     /*
      * This function.is used to indicate progress when storescp receives instance data over the
      * network. On the final call to this function (identified by progress->state == DIMSE_StoreEnd)
@@ -1936,9 +1948,12 @@ storeSCPCallback(
             {
                 OFLOG_WARN(storescpLogger, "DICOM file already exists, overwriting: " << fileName);
             }
-            OFCondition cond = cbdata->dcmff->saveFile(fileName.c_str(), xfer, opt_sequenceType, opt_groupLength,
-                opt_paddingType, OFstatic_cast(Uint32, opt_filepad), OFstatic_cast(Uint32, opt_itempad),
-                (opt_useMetaheader) ? EWM_fileformat : EWM_dataset);
+            
+            OFCondition cond = cbdata->dcmff->saveFile( fileName.c_str(), xfer, opt_sequenceType, opt_groupLength,
+                                                        opt_paddingType, OFstatic_cast(Uint32, opt_filepad), OFstatic_cast(Uint32, opt_itempad),
+                                                        (opt_useMetaheader) ? EWM_fileformat : EWM_dataset);
+
+
             if (cond.bad())
             {
                 OFLOG_ERROR(storescpLogger, "cannot write DICOM file: " << fileName << ": " << cond.text());
@@ -1948,6 +1963,7 @@ storeSCPCallback(
                 OFStandard::deleteFile(fileName);
             }
 
+            bool success = true;
             // check the image to make sure it is consistent, i.e. that its sopClass and sopInstance correspond
             // to those mentioned in the request. If not, set the status in the response message variable.
             if (rsp->DimseStatus == STATUS_Success)
@@ -1957,14 +1973,32 @@ storeSCPCallback(
                 {
                     OFLOG_ERROR(storescpLogger, "bad DICOM file: " << fileName);
                     rsp->DimseStatus = STATUS_STORE_Error_CannotUnderstand;
+                    success = false;
                 }
                 else if (strcmp(sopClass, req->AffectedSOPClassUID) != 0)
                 {
                     rsp->DimseStatus = STATUS_STORE_Error_DataSetDoesNotMatchSOPClass;
+                    success = false;
                 }
                 else if (strcmp(sopInstance, req->AffectedSOPInstanceUID) != 0)
                 {
                     rsp->DimseStatus = STATUS_STORE_Error_DataSetDoesNotMatchSOPClass;
+                    success = false;
+                }
+            }
+
+
+            if (success)
+            {
+                // TODO send data off to pipeline for extraction
+                OFLOG_INFO(storescpLogger, "Sending to pipeline");
+
+                if (cbdata->dcmff)
+                {
+                    auto data = std::make_shared<StoredData>();
+                    data->dataset = std::make_shared<DcmDataset>(DcmDataset{ *cbdata->dcmff->getDataset() });  // try a data->dataset.reset() rather than a copy
+
+                    m_pipeline.injectData(data);
                 }
             }
         }
@@ -2074,8 +2108,7 @@ static OFCondition storeSCP(
         else
         {
             // don't create new UID, use the study instance UID as found in object
-            sprintf(imageFileName, "%s%c%s.%s%s", opt_outputDirectory.c_str(), PATH_SEPARATOR, dcmSOPClassUIDToModality(req->AffectedSOPClassUID, "UNKNOWN"),
-                req->AffectedSOPInstanceUID, opt_fileNameExtension.c_str());
+            sprintf(imageFileName, "%s%c%s.%s%s", opt_outputDirectory.c_str(), PATH_SEPARATOR, dcmSOPClassUIDToModality(req->AffectedSOPClassUID, "UNKNOWN"), req->AffectedSOPInstanceUID, opt_fileNameExtension.c_str());
         }
     }
 
@@ -2086,9 +2119,9 @@ static OFCondition storeSCP(
         OFLOG_INFO(storescpLogger, "Received Store Request");
         OFLOG_DEBUG(storescpLogger, DIMSE_dumpMessage(str, *req, DIMSE_INCOMING, NULL, presID));
     }
-    else {
-        OFLOG_INFO(storescpLogger, "Received Store Request (MsgID " << req->MessageID << ", "
-            << dcmSOPClassUIDToModality(req->AffectedSOPClassUID, "OT") << ")");
+    else 
+    {
+        OFLOG_INFO(storescpLogger, "Received Store Request (MsgID " << req->MessageID << ", " << dcmSOPClassUIDToModality(req->AffectedSOPClassUID, "OT") << ")");
     }
 
     // initialize some variables
@@ -2113,13 +2146,11 @@ static OFCondition storeSCP(
     // DIMSE_storeProvider must be called with certain parameters.
     if (opt_bitPreserving)
     {
-        cond = DIMSE_storeProvider(assoc, presID, req, imageFileName, opt_useMetaheader, NULL,
-            storeSCPCallback, &callbackData, opt_blockMode, opt_dimse_timeout);
+        cond = DIMSE_storeProvider(assoc, presID, req, imageFileName, opt_useMetaheader, NULL, storeSCPCallback, &callbackData, opt_blockMode, opt_dimse_timeout);
     }
     else
     {
-        cond = DIMSE_storeProvider(assoc, presID, req, NULL, opt_useMetaheader, &dset,
-            storeSCPCallback, &callbackData, opt_blockMode, opt_dimse_timeout);
+        cond = DIMSE_storeProvider(assoc, presID, req, NULL, opt_useMetaheader, &dset, storeSCPCallback, &callbackData, opt_blockMode, opt_dimse_timeout);
     }
 
     // if some error occurred, dump corresponding information and remove the outfile if necessary

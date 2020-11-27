@@ -34,6 +34,12 @@ namespace framework
     }
 
 
+    void PipelineStage::injectData(const shared_ptr<StageData>& data)
+    {
+        m_data->add(data);
+    }
+    
+
     void PipelineStage::handleStageCommand(const Poco::AutoPtr<StageCommand>& pCommand)
     {
         // if this for us
@@ -42,7 +48,7 @@ namespace framework
             switch (pCommand->cmd)
             {
             case StageCommand::Command::CommandDataAvailable:
-                m_data->add(pCommand->data);
+                injectData(pCommand->data);
                 break;
 
             default:

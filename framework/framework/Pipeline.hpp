@@ -52,6 +52,8 @@ namespace framework
 
         void addStage(shared_ptr<PipelineStage> stage);
 
+        void injectData(const shared_ptr<StageData>& data);
+
     private:
         std::atomic<PipelineStage::StageId> m_nextStageId;
         string m_name; 
