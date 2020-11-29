@@ -116,15 +116,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\include;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;$(SolutionDir)framework</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\include;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;$(SolutionDir)framework;$(SolutionDir)..\external\elasticlient\include;$(SolutionDir)..\external\elasticlient\external\jsoncpp\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)/$(Configuration);$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\debug\lib;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\debug\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>framework.lib;PocoFoundationmtd.lib;dcmjplsd.lib;dcmjpegd.lib;dcmimaged.lib;dcmnetd.lib;dcmdatad.lib;oflogd.lib;ofstdd.lib;dcmtlsd.lib;wsock32.lib;ws2_32.lib;Iphlpapi.lib;netapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)/$(Configuration);$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\debug\lib;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\debug\lib;$(SolutionDir)..\external\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>framework.lib;elasticlient.lib;cpr.lib;jsoncpp.lib;PocoFoundationmtd.lib;dcmjplsd.lib;dcmjpegd.lib;dcmimaged.lib;dcmnetd.lib;dcmdatad.lib;oflogd.lib;ofstdd.lib;dcmtlsd.lib;wsock32.lib;ws2_32.lib;Iphlpapi.lib;netapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,7 +135,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\include;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;$(SolutionDir)framework</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\include;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;$(SolutionDir)framework;$(SolutionDir)..\external\elasticlient\include;$(SolutionDir)..\external\elasticlient\external\jsoncpp\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -144,8 +144,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)/$(Configuration);$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\lib;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>framework.lib;PocoFoundationmtd.lib;dcmjpls.lib;dcmjpeg.lib;dcmimage.lib;dcmnet.lib;dcmdata.lib;oflog.lib;ofstd.lib;dcmtlsd.lib;wsock32.lib;ws2_32.lib;Iphlpapi.lib;netapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)/$(Configuration);$(SolutionDir)..\vcpkg\packages\dcmtk_x64-windows-static\lib;$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\lib;$(SolutionDir)..\external\lib\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>framework.lib;elasticlient.lib;cpr.lib;jsoncpp.lib;PocoFoundationmt.lib;dcmjpls.lib;dcmjpeg.lib;dcmimage.lib;dcmnet.lib;dcmdata.lib;oflog.lib;ofstd.lib;dcmtls.lib;wsock32.lib;ws2_32.lib;Iphlpapi.lib;netapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

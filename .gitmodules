@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
+[submodule "external/elasticlient"]
+	path = external/elasticlient
+	url = https://github.com/seznam/elasticlient.git

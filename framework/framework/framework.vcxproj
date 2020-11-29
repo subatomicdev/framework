@@ -118,7 +118,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\vcpkg\packages\asio_x64-windows-static\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\vcpkg\packages\asio_x64-windows-static\include;$(SolutionDir)..\external\elasticlient\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -128,7 +128,7 @@
     <Lib>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\debug\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\debug\lib;$(SolutionDir)..\external\lib\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -167,7 +167,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\vcpkg\packages\asio_x64-windows-static\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\include;%(AdditionalIncludeDirectories);$(SolutionDir)..\vcpkg\packages\asio_x64-windows-static\include;$(SolutionDir)..\external\elasticlient\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -179,7 +179,7 @@
     <Lib>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\vcpkg\packages\poco_x64-windows-static\lib;$(SolutionDir)..\external\lib\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>

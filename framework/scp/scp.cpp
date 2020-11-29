@@ -220,6 +220,8 @@ int main(int argc, char* argv[])
 {
     // ADDED
     m_pipeline.addStage(std::make_shared<Prepare>());
+    m_pipeline.addStage(std::make_shared<IndexDicom>());
+    
     m_pipeline.start();
 
 
@@ -259,8 +261,7 @@ int main(int argc, char* argv[])
 
     cmd.addGroup("network options:");
     cmd.addSubGroup("association negotiation profile from configuration file:");
-    cmd.addOption("--config-file", "-xf", 2, "[f]ilename, [p]rofile: string",
-        "use profile p from config file f");
+    cmd.addOption("--config-file", "-xf", 2, "[f]ilename, [p]rofile: string", "use profile p from config file f");
     cmd.addSubGroup("preferred network transfer syntaxes (not with --config-file):");
     cmd.addOption("--prefer-uncompr", "+x=", "prefer explicit VR local byte order (default)");
     cmd.addOption("--prefer-little", "+xe", "prefer explicit VR little endian TS");
@@ -313,10 +314,8 @@ int main(int argc, char* argv[])
     cmd.addOption("--refuse", "refuse association");
     cmd.addOption("--reject", "reject association if no implement. class UID");
     cmd.addOption("--ignore", "ignore store data, receive but do not store");
-    cmd.addOption("--sleep-after", 1, "[s]econds: integer",
-        "sleep s seconds after store (default: 0)");
-    cmd.addOption("--sleep-during", 1, "[s]econds: integer",
-        "sleep s seconds during store (default: 0)");
+    cmd.addOption("--sleep-after", 1, "[s]econds: integer", "sleep s seconds after store (default: 0)");
+    cmd.addOption("--sleep-during", 1, "[s]econds: integer", "sleep s seconds during store (default: 0)");
     cmd.addOption("--abort-after", "abort association after receipt of C-STORE-RQ\n(but before sending response)");
     cmd.addOption("--abort-during", "abort association during receipt of C-STORE-RQ");
     cmd.addOption("--promiscuous", "-pm", "promiscuous mode, accept unknown SOP classes\n(not with --config-file)");
