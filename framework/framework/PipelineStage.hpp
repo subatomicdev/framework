@@ -22,6 +22,8 @@ namespace framework
     using std::map;
     using std::queue;
     
+    typedef unsigned short StageId;
+
 
     //TODO consider std::variant
     class StageData
@@ -29,8 +31,58 @@ namespace framework
     public:
         StageData() = default;
         virtual ~StageData() = default;        
+
+        bool isFinalData() const { return m_finalData.load(); }
+        void isFinalData(bool final) { m_finalData.store(final); }
+
+    private:
+        std::atomic_bool m_finalData;
     };
 
+
+    struct StageCommand : public Poco::Notification
+    {
+        enum class Command { CommandNone, CommandDataAvailable };
+
+        StageCommand(const Command c = Command::CommandNone) : cmd(c), senderStageId(0), targetStageId(0), data(nullptr)
+        {
+
+        }
+
+        StageCommand(const StageId targetId, const StageId senderId, const shared_ptr<StageData>& d)
+            : cmd(Command::CommandDataAvailable),
+            targetStageId(targetId),
+            senderStageId(senderId),
+            data(d)
+        {
+
+        }
+
+        Command cmd;
+        StageId senderStageId;
+        StageId targetStageId;
+        shared_ptr<StageData> data;
+    };
+
+
+    struct PipelineStageControlNotification : public Poco::Notification
+    {
+        enum class Control { StagePause, StageRestart };
+
+        PipelineStageControlNotification(const Control c, const size_t stageId, const std::string& stageName) : control(c), stageSendId(stageId), stagename(stageName)
+        {
+
+        }
+
+        virtual std::string name() const override
+        {
+            return stagename;
+        }
+
+        size_t stageSendId;
+        Control control;
+        std::string stagename;
+    };
 
     using namespace std::chrono_literals;
 
@@ -38,7 +90,7 @@ namespace framework
     class PipelineStage
     {
     public:
-        typedef unsigned short StageId;
+        
 
     private:
 
@@ -55,6 +107,7 @@ namespace framework
             virtual void add(const shared_ptr<StageData>& d) = 0;
             virtual shared_ptr<StageData> next(const std::chrono::milliseconds& waitMs) = 0;
             virtual bool hasData() = 0;
+            virtual size_t queueSize() const = 0;
         };
 
 
@@ -98,38 +151,23 @@ namespace framework
             }
 
 
+            virtual size_t queueSize() const override
+            {
+                std::scoped_lock lock(mux);
+                return queue.size();
+            }
+
             std::queue<shared_ptr<StageData>> queue;
-            std::mutex mux, cvMux;
+            mutable std::mutex mux;
+            std::mutex cvMux;
             std::condition_variable cv;
         };
 
 
-        struct StageCommand : public Poco::Notification
-        {
-            enum class Command { CommandNone, CommandDataAvailable };
-
-            StageCommand(const Command c = Command::CommandNone) : cmd(c), senderStageId(0), targetStageId(0), data(nullptr)
-            {
-
-            }
-
-            StageCommand(const StageId targetId, const StageId senderId, const shared_ptr<StageData>& d)
-                :   cmd(Command::CommandDataAvailable),
-                    targetStageId(targetId),
-                    senderStageId(senderId),
-                    data(d)
-            {
-
-            }
-
-            Command cmd;
-            StageId senderStageId;
-            StageId targetStageId;
-            shared_ptr<StageData> data;
-        };
+        
 
 
-    protected:
+    protected:        
         PipelineStage(const string& name = "", const BufferType buffType = BufferType::Queue);
 
         virtual ~PipelineStage();
@@ -139,6 +177,7 @@ namespace framework
         
 
         const string& name() const { return m_name; }
+        StageId id() const { return m_id; }
 
         virtual void initialise(const StageId id, const shared_ptr<Poco::NotificationCenter>& nc);
 
@@ -151,6 +190,8 @@ namespace framework
         void handleStageCommand(const Poco::AutoPtr<StageCommand>& pNf);
 
 
+        size_t queueSize() const { return m_data->queueSize(); }
+
     protected:
 
         bool shouldStop();
@@ -158,11 +199,8 @@ namespace framework
 
         void dataComplete(const shared_ptr<StageData>& data)
         {
-            auto future = std::async(std::launch::async, [this, &data]
-            {
-                const StageId targetStage = (m_id + 1U);    // we assume it's the next stage
-                m_nc->postNotification(new StageCommand (targetStage, m_id, data));
-            });
+            const StageId targetStage = (m_id + 1U);    // we assume it's the next stage
+            m_nc->postNotification(new StageCommand(targetStage, m_id, data));
         }
 
 

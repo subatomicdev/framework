@@ -8,6 +8,13 @@
 
 struct StoredData : framework::StageData
 {
+    StoredData() = default;
+
+    StoredData(std::shared_ptr<DcmDataset>&& ds) : dataset(std::move(ds))
+    {
+
+    }
+
     std::shared_ptr<DcmDataset> dataset;
 };
 

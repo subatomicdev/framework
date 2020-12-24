@@ -42,7 +42,6 @@ namespace framework
 
     void PipelineStage::handleStageCommand(const Poco::AutoPtr<StageCommand>& pCommand)
     {
-        // if this for us
         if (pCommand->targetStageId == m_id)
         {
             switch (pCommand->cmd)

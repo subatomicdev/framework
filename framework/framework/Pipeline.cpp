@@ -5,7 +5,7 @@ namespace framework
 {
     Pipeline::Pipeline(const string& name) : m_name(name), m_nextStageId(1)
     {
-
+        m_nc = std::make_shared<Poco::NotificationCenter>();
     }
 
 
@@ -15,22 +15,28 @@ namespace framework
     }
 
 
-    void Pipeline::start()
+    bool Pipeline::initialise()
     {
-        m_nc = std::make_shared<Poco::NotificationCenter>();
         m_stagePool = std::make_unique<ctpl::thread_pool>(static_cast<int>(m_stages.size()));
 
         for (auto& stage : m_stages)
         {
-            const PipelineStage::StageId& id = stage.first;
-
             // initialise, pass the notification center so everything uses the same notification center,
             // allowing communication between pipeline and stages.
-            stage.second->initialise(id, m_nc);
+            stage.second->initialise(stage.first, m_nc);
+        }
 
+        return true;
+    }
+
+
+    void Pipeline::start()
+    {
+        for (auto& stage : m_stages)
+        {
             // store the future of the stage worker for when we stop()
             // after this call, the stage::run() is executing in one of the pool's threads
-            m_stageFutures[id]  = m_stagePool->push(StageWorker{ stage.second }).share();            
+            m_stageFutures[stage.first] = m_stagePool->push(StageWorker{ stage.second }).share();
         }
     }
 

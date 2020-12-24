@@ -215,7 +215,7 @@ extern "C" void sigChildHandler(int)
 framework::Pipeline m_pipeline("SCP Pipeline");
 
 
-
+/*
 int main(int argc, char* argv[])
 {
     // ADDED
@@ -386,20 +386,20 @@ int main(int argc, char* argv[])
         "specifies a timeout of t seconds for\nend-of-study determination");
     cmd.addOption("--exec-sync", "-xs", "execute command synchronously in foreground");
 
-    /* evaluate command line */
+    // evaluate command line
     prepareCmdLineArgs(argc, argv, OFFIS_CONSOLE_APPLICATION);
     if (app.parseCommandLine(cmd, argc, argv))
     {
-        /* print help text and exit */
+        // print help text and exit 
         if (cmd.getArgCount() == 0)
             app.printUsage();
 
-        /* check exclusive options first */
+        // check exclusive options first
         if (cmd.hasExclusiveOption())
         {
             if (cmd.findOption("--version"))
             {
-                app.printHeader(OFTrue /*print host identifier*/);
+                app.printHeader(OFTrue); /print host identifier
                 COUT << OFendl << "External libraries used:";
 #if !defined(WITH_ZLIB) && !defined(WITH_OPENSSL) && !defined(WITH_TCPWRAPPER)
                 COUT << " none" << OFendl;
@@ -605,7 +605,7 @@ int main(int argc, char* argv[])
                 return 1;
             }
 
-            /* perform name mangling for config file key */
+            // perform name mangling for config file key
             OFString sprofile;
             const unsigned char* c = OFreinterpret_cast(const unsigned char*, opt_profileName);
             while (*c)
@@ -879,7 +879,7 @@ int main(int argc, char* argv[])
         if (cmd.findOption("--exec-sync")) opt_execSync = OFTrue;
     }
 
-    /* print resource identifier */
+    // print resource identifier
     OFLOG_DEBUG(storescpLogger, rcsid << OFendl);
 
     // evaluate (most of) the TLS command line options (if we are compiling with OpenSSL)
@@ -887,7 +887,7 @@ int main(int argc, char* argv[])
 
 #ifndef DISABLE_PORT_PERMISSION_CHECK
 #ifdef HAVE_GETEUID
-    /* if port is privileged we must be as well */
+    // if port is privileged we must be as well
     if (opt_port < 1024)
     {
         if (geteuid() != 0)
@@ -899,22 +899,21 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
-    /* make sure data dictionary is loaded */
+    // make sure data dictionary is loaded 
     if (!dcmDataDict.isDictionaryLoaded())
     {
         OFLOG_WARN(storescpLogger, "no data dictionary loaded, check environment variable: "
             << DCM_DICT_ENVIRONMENT_VARIABLE);
     }
 
-    /* if the output directory does not equal "." (default directory) */
+    // if the output directory does not equal "." (default directory) 
     if (opt_outputDirectory != ".")
     {
-        /* if there is a path separator at the end of the path, get rid of it */
+        // if there is a path separator at the end of the path, get rid of it 
         OFStandard::normalizeDirName(opt_outputDirectory, opt_outputDirectory);
 
-        /* check if the specified directory exists and if it is a directory.
-         * If the output directory is invalid, dump an error message and terminate execution.
-         */
+        // check if the specified directory exists and if it is a directory.
+        // If the output directory is invalid, dump an error message and terminate execution.
         if (!OFStandard::dirExists(opt_outputDirectory))
         {
             OFLOG_FATAL(storescpLogger, "specified output directory does not exist");
@@ -922,7 +921,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    /* check if the output directory is writeable */
+    // check if the output directory is writeable
     if (!opt_ignore && !OFStandard::isWriteable(opt_outputDirectory))
     {
         OFLOG_FATAL(storescpLogger, "specified output directory is not writeable");
@@ -945,7 +944,7 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    /* initialize network, i.e. create an instance of T_ASC_Network*. */
+    // initialize network, i.e. create an instance of T_ASC_Network*.
     OFCondition cond = ASC_initializeNetwork(NET_ACCEPTOR, OFstatic_cast(int, opt_port), opt_acse_timeout, &net);
     if (cond.bad())
     {
@@ -953,14 +952,14 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    /* drop root privileges now and revert to the calling user id (if we are running as setuid root) */
+    // drop root privileges now and revert to the calling user id (if we are running as setuid root) 
     if (OFStandard::dropPrivileges().bad())
     {
         OFLOG_FATAL(storescpLogger, "setuid() failed, maximum number of processes/threads for uid already running.");
         return 1;
     }
 
-    /* create a secure transport layer if requested and OpenSSL is available */
+    // create a secure transport layer if requested and OpenSSL is available
     cond = tlsOptions.createTransportLayer(net, NULL, app, cmd);
     if (cond.bad()) {
         OFLOG_FATAL(storescpLogger, DimseCondition::dump(temp_str, cond));
@@ -974,16 +973,15 @@ int main(int argc, char* argv[])
 
     while (cond.good())
     {
-        /* receive an association and acknowledge or reject it. If the association was */
-        /* acknowledged, offer corresponding services and invoke one or more if required. */
+        // receive an association and acknowledge or reject it. If the association was
+        // acknowledged, offer corresponding services and invoke one or more if required.
         cond = acceptAssociation(net, asccfg, tlsOptions.secureConnectionRequested());
 
-        /* remove zombie child processes */
+        // remove zombie child processes 
         cleanChildren(-1, OFFalse);
 
-        /* since storescp is usually terminated with SIGTERM or the like,
-         * we write back an updated random seed after every association handled.
-         */
+        // since storescp is usually terminated with SIGTERM or the like,
+        // we write back an updated random seed after every association handled.
         cond = tlsOptions.writeRandomSeed();
         if (cond.bad()) {
             // failure to write back the random seed is a warning, not an error
@@ -997,8 +995,8 @@ int main(int argc, char* argv[])
         if (DUL_processIsForkedChild()) break;
     }
 
-    /* drop the network, i.e. free memory of T_ASC_Network* structure. This call */
-    /* is the counterpart of ASC_initializeNetwork(...) which was called above. */
+    // drop the network, i.e. free memory of T_ASC_Network* structure. This call
+    // is the counterpart of ASC_initializeNetwork(...) which was called above.
     cond = ASC_dropNetwork(&net);
     if (cond.bad())
     {
@@ -1009,6 +1007,7 @@ int main(int argc, char* argv[])
     OFStandard::shutdownNetwork();
     return 0;
 }
+*/
 
 
 static OFCondition acceptAssociation(T_ASC_Network* net, DcmAssociationConfiguration& asccfg, OFBool secureConnection)
@@ -1994,9 +1993,7 @@ static void storeSCPCallback(void* callbackData, T_DIMSE_StoreProgress* progress
 
                 if (cbdata->dcmff)
                 {
-                    auto data = std::make_shared<StoredData>();
-                    data->dataset = std::make_shared<DcmDataset>(DcmDataset{ *cbdata->dcmff->getDataset() });  // try a data->dataset.reset() rather than a copy
-
+                    auto data = std::make_shared<StoredData>(std::make_shared<DcmDataset>(DcmDataset{ *cbdata->dcmff->getDataset() }));
                     m_pipeline.injectData(data);
                 }
             }
@@ -2013,10 +2010,7 @@ static void storeSCPCallback(void* callbackData, T_DIMSE_StoreProgress* progress
 }
 
 
-static OFCondition storeSCP(
-    T_ASC_Association* assoc,
-    T_DIMSE_Message* msg,
-    T_ASC_PresentationContextID presID)
+static OFCondition storeSCP(T_ASC_Association* assoc, T_DIMSE_Message* msg, T_ASC_PresentationContextID presID)
     /*
      * This function processes a DIMSE C-STORE-RQ command that was
      * received over the network connection.

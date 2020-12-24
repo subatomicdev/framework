@@ -10,12 +10,15 @@ namespace framework
 	class IntervalTimer
 	{
 	public:
+		IntervalTimer();
 		IntervalTimer(const std::chrono::milliseconds period);
 		IntervalTimer(const std::chrono::seconds period);
 
 		~IntervalTimer();
 
 		void start(std::function<void()> callback);
+		void start(std::function<void()> callback, const std::chrono::milliseconds period);
+
 		void stop();
 
 	private:

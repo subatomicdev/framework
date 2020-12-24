@@ -47,19 +47,27 @@ namespace framework
         Pipeline(const string& name = "");
         ~Pipeline();
 
-        void start();
-        void stop(const bool waitForStages = true);
+        virtual void start();
+        virtual void stop(const bool waitForStages = true);
 
-        void addStage(shared_ptr<PipelineStage> stage);
+        virtual bool initialise();
+
+        virtual void addStage(shared_ptr<PipelineStage> stage);
 
         void injectData(const shared_ptr<StageData>& data);
 
+        string name() const { return m_name; }
+
+
+    protected:
+        shared_ptr<Poco::NotificationCenter> notificationCenter() { return m_nc; }
+
     private:
-        std::atomic<PipelineStage::StageId> m_nextStageId;
+        std::atomic<StageId> m_nextStageId;
         string m_name; 
         unique_ptr<ctpl::thread_pool> m_stagePool;
-        map<PipelineStage::StageId, shared_ptr<PipelineStage>> m_stages;
-        map<PipelineStage::StageId, shared_future<void>> m_stageFutures;
+        map<StageId, shared_ptr<PipelineStage>> m_stages;
+        map<StageId, shared_future<void>> m_stageFutures;
         shared_ptr<Poco::NotificationCenter> m_nc;
     };
 }

@@ -3,6 +3,11 @@
 
 namespace framework
 {
+	IntervalTimer::IntervalTimer() : m_running(false)
+	{
+
+	}
+
 	IntervalTimer::IntervalTimer(const std::chrono::milliseconds period) : m_period(period), m_running(false)
 	{
 
@@ -18,6 +23,13 @@ namespace framework
 	IntervalTimer::~IntervalTimer()
 	{
 		stop();
+	}
+
+
+	void IntervalTimer::start(std::function<void()> callback, const std::chrono::milliseconds period)
+	{
+		m_period = period;
+		start(callback);
 	}
 
 
