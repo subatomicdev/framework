@@ -53,12 +53,6 @@ namespace framework
         for (auto& stage : m_stages)
         {
             stage.second->stopStage();
-
-            //if (waitForStages)
-            //{
-            //    // check for valid futures because this map is only populated when start() is called
-            //    m_stageFutures[stage.first].wait();
-            //}
         }
 
         if (waitForStages)

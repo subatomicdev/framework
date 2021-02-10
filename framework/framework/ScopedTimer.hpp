@@ -1,6 +1,8 @@
-#pragma once
+#ifndef __SCOPED_TIMER_H_
+#define __SCOPED_TIMER_H_
 
 #include <chrono>
+
 
 namespace framework
 {
@@ -8,7 +10,18 @@ namespace framework
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
-
+    /// Provides a timer, in milliseconds. 
+    /// 
+    /// The timer is started on object construction and ended by calling stop();
+    ///
+    /// The time, in milliseconds, is returned by stop().
+    ///
+    /// NOTE: only call stop() once, but elapsed() can be called multiple times.
+    ///
+    /// Usage:  
+    ///    ScopedTimer timer;   // this starts the timer
+    ///     .......
+    ///    cout << "Time taken: " << timer.stop();
     class ScopedTimer
     {
     public:
@@ -33,5 +46,7 @@ namespace framework
     private:
         steady_clock::time_point m_start;
     };
-
 }
+
+
+#endif

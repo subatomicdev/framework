@@ -21,6 +21,8 @@ namespace framework
     using std::string;
     using std::map;
     using std::queue;
+    using std::mutex;
+
     
     typedef unsigned short StageId;
 
@@ -50,10 +52,10 @@ namespace framework
         }
 
         StageCommand(const StageId targetId, const StageId senderId, const shared_ptr<StageData>& d)
-            : cmd(Command::CommandDataAvailable),
-            targetStageId(targetId),
-            senderStageId(senderId),
-            data(d)
+            :   cmd(Command::CommandDataAvailable),
+                targetStageId(targetId),
+                senderStageId(senderId),
+                data(d)
         {
 
         }
@@ -83,6 +85,7 @@ namespace framework
         Control control;
         std::string stagename;
     };
+
 
     using namespace std::chrono_literals;
 
@@ -115,14 +118,19 @@ namespace framework
         /// to use an array implemented as a ring buffer for more control and potentially more performance.
         struct DataQueue : public StageBuffer
         {
+            DataQueue() 
+            {
+
+            }
+
             virtual void add(const shared_ptr<StageData>& d) override
             {
                 {
-                    std::scoped_lock lock(mux);
+                    std::scoped_lock lock(queueMux);
                     queue.push(d);
                 }
 
-                cv.notify_one();
+                newDataCV.notify_one();
             }
 
 
@@ -130,12 +138,12 @@ namespace framework
             {
                 shared_ptr<StageData> data;
 
-                std::unique_lock cvLock(cvMux);
-                cv.wait_for(cvLock, waitMs);
+                std::unique_lock cvLock(newDataCvMux);
+                newDataCV.wait_for(cvLock, waitMs);
 
                 if (hasData())
                 {
-                    std::scoped_lock cvLock(mux);
+                    std::scoped_lock cvLock(queueMux);
                     data = queue.front();
                     queue.pop();
                 }
@@ -146,35 +154,37 @@ namespace framework
 
             virtual bool hasData() override
             {
-                std::scoped_lock lock(mux);
+                std::scoped_lock lock(queueMux);
                 return !queue.empty();
             }
 
 
             virtual size_t queueSize() const override
             {
-                std::scoped_lock lock(mux);
+                std::scoped_lock lock(queueMux);
                 return queue.size();
             }
 
             std::queue<shared_ptr<StageData>> queue;
-            mutable std::mutex mux;
-            std::mutex cvMux;
-            std::condition_variable cv;
+            mutable std::mutex queueMux;
+            std::mutex newDataCvMux;
+            std::condition_variable newDataCV;
         };
 
 
-        
-
-
     protected:        
-        PipelineStage(const string& name = "", const BufferType buffType = BufferType::Queue);
+        enum PauseState { Requested, Paused, PauseEnd };
 
+
+        PipelineStage(const string& name = "", const BufferType buffType = BufferType::Queue);
         virtual ~PipelineStage();
 
 
+        bool isPauseRequested() const;
+        void enterPause();
+
+
     public:
-        
 
         const string& name() const { return m_name; }
         StageId id() const { return m_id; }
@@ -188,6 +198,7 @@ namespace framework
         inline void injectData(const shared_ptr<StageData>& data);
 
         void handleStageCommand(const Poco::AutoPtr<StageCommand>& pNf);
+        void handleStageNotification(const Poco::AutoPtr<PipelineStageControlNotification>& notification);
 
 
         size_t queueSize() const { return m_data->queueSize(); }
@@ -197,24 +208,17 @@ namespace framework
         bool shouldStop();
 
 
-        void dataComplete(const shared_ptr<StageData>& data)
+        void dataComplete(shared_ptr<StageData>&& data)
         {
             const StageId targetStage = (m_id + 1U);    // we assume it's the next stage
-            m_nc->postNotification(new StageCommand(targetStage, m_id, data));
+            m_nc->postNotification(new StageCommand(targetStage, m_id, std::move(data))); 
         }
 
 
         template<class DataT = StageData>
         shared_ptr<DataT> nextData(const std::chrono::milliseconds& waitMs = 100ms)
         {
-            shared_ptr<DataT> data;
-
-            if (m_data->hasData())
-            {
-                data = std::dynamic_pointer_cast<DataT>(m_data->next(waitMs));
-            }
-
-            return data;
+            return std::dynamic_pointer_cast<DataT>(m_data->next(waitMs));
         }
 
 
@@ -224,13 +228,15 @@ namespace framework
         }
 
 
-
-
     private:
         string m_name;
         StageId m_id;
         std::atomic_bool m_stopRequest;
         std::unique_ptr<StageBuffer> m_data;
         shared_ptr<Poco::NotificationCenter> m_nc;
+
+        mutable std::mutex m_muxPause;
+        std::condition_variable m_cvPause;
+        std::atomic<PauseState> m_pauseState;
     };
 }
