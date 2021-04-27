@@ -8,10 +8,12 @@ namespace framework
 
 	}
 
+
 	IntervalTimer::IntervalTimer(const std::chrono::milliseconds period) : m_period(period), m_running(false)
 	{
 
 	}
+
 
 	IntervalTimer::~IntervalTimer()
 	{
@@ -36,8 +38,9 @@ namespace framework
 			while (m_running.load())
 			{
 				std::unique_lock lock(m_mux);
-				m_cv.wait_for(lock, m_period, [this] { return m_running.load() == false; });
-				m_callback();
+				
+				if (!m_cv.wait_for(lock, m_period, [this] { return m_running.load() == false; }))
+					m_callback();
 			}
 		});
 	}
