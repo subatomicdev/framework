@@ -230,7 +230,20 @@ int main(int argc, char ** argv)
 
     //p1.start();
     
+    {
+      auto onTick = [] { std::cout << "whatup\n"; };
 
+      IntervalTimer it1(10ms);
+
+      it1.start(onTick);
+    
+      std::this_thread::sleep_for(5s);
+    }
+    
+    
+
+
+    /*
     // TCP Server
     string ip = "127.0.0.1";
     if (argc >= 2)
@@ -290,6 +303,7 @@ int main(int argc, char ** argv)
 
     logg("Stopping TCP Server");
     server.stop();
+    */
 
     return 0;
 }

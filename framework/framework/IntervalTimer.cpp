@@ -3,7 +3,7 @@
 
 namespace framework
 {
-	IntervalTimer::IntervalTimer() : m_running(false)
+	IntervalTimer::IntervalTimer() : m_running(false), m_period(std::chrono::microseconds::rep{ 0 })
 	{
 
 	}
@@ -12,13 +12,6 @@ namespace framework
 	{
 
 	}
-
-
-	IntervalTimer::IntervalTimer(const std::chrono::seconds period) : m_period(period), m_running(false)
-	{
-
-	}
-
 
 	IntervalTimer::~IntervalTimer()
 	{
@@ -36,34 +29,15 @@ namespace framework
 	void IntervalTimer::start(std::function<void()> callback)
 	{
 		m_callback = callback;
-		m_running = true;
+		m_running.store(true);
 
 		m_future = std::async(std::launch::async, [this]
 		{
-			using namespace std::chrono_literals;
-			const std::chrono::milliseconds CheckPeriod = 100ms;
-
-			auto time = std::chrono::steady_clock::now();
-			auto triggerTime = time + m_period;
-
 			while (m_running.load())
 			{
-				std::this_thread::sleep_for(std::min<std::chrono::milliseconds>(CheckPeriod, m_period));
-
-				time = std::chrono::steady_clock::now();
-				if (time >= triggerTime)
-				{
-					try
-					{
-						m_callback();
-					}
-					catch (...)
-					{
-
-					}
-
-					triggerTime += m_period;
-				}
+				std::unique_lock lock(m_mux);
+				m_cv.wait_for(lock, m_period, [this] { return m_running.load() == false; });
+				m_callback();
 			}
 		});
 	}
@@ -71,11 +45,10 @@ namespace framework
 
 	void IntervalTimer::stop()
 	{
-		m_running = false;
+		m_running.store(false);
+		m_cv.notify_one();
 
 		if (m_future.valid())
-		{
 			m_future.wait();
-		}
 	}
 }

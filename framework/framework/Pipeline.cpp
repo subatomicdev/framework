@@ -17,16 +17,19 @@ namespace framework
 
     bool Pipeline::initialise()
     {
+      if (!m_stages.empty())
+      {
         m_stagePool = std::make_unique<ctpl::thread_pool>(static_cast<int>(m_stages.size()));
 
         for (auto& stage : m_stages)
         {
-            // initialise, pass the notification center so everything uses the same notification center,
-            // allowing communication between pipeline and stages.
-            stage.second->initialise(stage.first, m_nc);
+          // initialise, pass the notification center so everything uses the same notification center,
+          // allowing communication between pipeline and stages.
+          stage.second->initialise(stage.first, m_nc);
         }
+      }
 
-        return true;
+      return m_stagePool && !m_stages.empty();
     }
 
 
